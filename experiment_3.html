@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Карта Северодвинска - Дома по десятилетиям</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <style>
+        /* Основной стиль страницы */
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            background: linear-gradient(45deg, #ffffff, #ffffff);
+            animation: fadeIn 1.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        h1 {
+            font-size: 1.8em;
+            margin: 10px;
+            color: #525252;
+            animation: fadeIn 1s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Дополнительные строки под заголовком */
+        .subtitle {
+            font-size: 0.9em;
+            color: #505050;
+            margin: 0;
+            margin-bottom: 10px;
+            animation: fadeIn 2s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .leaflet-control-attribution {
+            display: none;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Легенда карты */
+        .legend {
+            position: absolute;
+            top: 120px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            line-height: 1.6;
+            z-index: 1000;
+            animation: fadeIn 2s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .legend-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border-radius: 3px;
+        }
+
+        /* Цветовая градация для легенды */
+        .color-1930s { background-color: #8B4513; } 
+        .color-1940s { background-color: #D2691E; }
+        .color-1950s { background-color: #FF8C00; }
+        .color-1960s { background-color: #FFA500; }
+        .color-1970s { background-color: #FFD700; }
+        .color-1980s { background-color: #00008B; } 
+        .color-1990s { background-color: #1E90FF; }
+        .color-2000s { background-color: #ff00c8; }
+        .color-2010s { background-color: #ff76e1; }
+        .color-2020s { background-color: #1eff00; } 
+
+        /* Новая панель для выбора карты-подложки */
+        .tile-layer-legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            line-height: 1.6;
+            z-index: 1000;
+            animation: fadeIn 2s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Интерактивная карта расположения жилых многоквартирных домов по десятилетию постройки</h1>
+    <p class="subtitle">Приложение к выпускной квалификационной работе</p>
+    <p class="subtitle">Костарев Марк Станиславович. 2024-2025</p>
+
+    <div id="map"></div>
+
+    <!-- Легенда карты с чекбоксами для включения/выключения слоев -->
+    <div class="legend">
+        <div class="legend-title">Года постройки</div>
+        <div class="legend-item"><input type="checkbox" id="layer-1930s" checked><div class="legend-color color-1930s"></div><label for="layer-1930s">1930-е</label></div>
+        <div class="legend-item"><input type="checkbox" id="layer-1940s" checked><div class="legend-color color-1940s"></div><label for="layer-1940s">1940-е</label></div>
+        <div class="legend-item"><input type="checkbox" id="layer-1950s" checked><div class="legend-color color-1950s"></div><label for="layer-1950s">1950-е</label></div>
+        <div class="legend-item"><input type="checkbox" id="layer-1960s" checked><div class="legend-color color-1960s"></div><label for="layer-1960s">1960-е</label></div>
+        <div class="legend-item"><input type="checkbox" id="layer-1970s" checked><div class="legend-color color-1970s"></div><label for="layer-1970s">1970-е</label></div>
+        <div class="legend-item"><input type="checkbox" id="layer-1980s" checked><div class="legend-color color-1980s"></div><label for="layer-1980s">1980-е</label></div>
+        <div class="legend-item"><input type="checkbox" id="layer-1990s" checked><div class="legend-color color-1990s"></div><label for="layer-1990s">1990-е</label></div>
+        <div class="legend-item"><input type="checkbox" id="layer-2000s" checked><div class="legend-color color-2000s"></div><label for="layer-2000s">2000-е</label></div>
+        <div class="legend-item"><input type="checkbox" id="layer-2010s" checked><div class="legend-color color-2010s"></div><label for="layer-2010s">2010-е</label></div>
+        <div class="legend-item"><input type="checkbox" id="layer-2020s" checked><div class="legend-color color-2020s"></div><label for="layer-2020s">2020-е</label></div>
+    </div>
+
+    <!-- Легенда для выбора карты-подложки -->
+    <div class="tile-layer-legend">
+        <div class="legend-title">Тип карты-подложки</div>
+        <div class="legend-item">
+            <input type="radio" name="tile-layer" id="standard" checked>
+            <label for="standard">Стандартная</label>
+        </div>
+        <div class="legend-item">
+            <input type="radio" name="tile-layer" id="dark">
+            <label for="dark">Тёмная</label>
+        </div>
+        <div class="legend-item">
+            <input type="radio" name="tile-layer" id="light">
+            <label for="light">Светлая</label>
+        </div>
+    </div>
+
+    <!-- Подключаем Leaflet и Omnivore для работы с KML -->
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-omnivore@0.3.4/leaflet-omnivore.min.js"></script>
+
+    <script>
+        // Инициализация карты
+        var map = L.map('map').setView([64.5635, 39.8302], 12);
+
+        // Базовый слой OpenStreetMap
+        var standardLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        L.control.scale({
+            position: 'bottomleft',  // Позиция контроллера на карте (можно 'bottomleft', 'bottomright', 'topleft', 'topright')
+            imperial: false,         // Отключаем футы и мили, оставляем только метрическую систему
+            maxWidth: 200            // Ширина масштаба, автоматически подстроится под доступное пространство
+        }).addTo(map);
+
+        // Тёмная карта
+        var darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            className: 'dark-mode'  
+        });
+
+        // Светлая карта
+        var lightLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            className: 'light-mode'  
+        });
+
+        // Обработчик изменения типа карты
+        document.querySelectorAll('.tile-layer-legend input[type="radio"]').forEach(function(radio) {
+            radio.addEventListener('change', function(event) {
+                // Убираем все слои
+                map.removeLayer(standardLayer);
+                map.removeLayer(darkLayer);
+                map.removeLayer(lightLayer);
+
+                // Добавляем выбранный слой
+                if (event.target.id === 'standard') {
+                    map.addLayer(standardLayer);
+                } else if (event.target.id === 'dark') {
+                    map.addLayer(darkLayer);
+                } else if (event.target.id === 'light') {
+                    map.addLayer(lightLayer);
+                }
+            });
+        });
+
+        // Cтили для каждого десятилетия
+        var styles = {
+            "1930s": { color: "#8B4513", weight: 2, opacity: 1.0 },
+            "1940s": { color: "#D2691E", weight: 2, opacity: 1.0 },
+            "1950s": { color: "#FF8C00", weight: 2, opacity: 1.0 },
+            "1960s": { color: "#FFA500", weight: 2, opacity: 1.0 },
+            "1970s": { color: "#FFD700", weight: 2, opacity: 1.0 },
+            "1980s": { color: "#00008B", weight: 2, opacity: 1.0 },
+            "1990s": { color: "#1E90FF", weight: 2, opacity: 1.0 },
+            "2000s": { color: "#ff00c8", weight: 2, opacity: 1.0 },
+            "2010s": { color: "#ff76e1", weight: 2, opacity: 1.0 },
+            "2020s": { color: "#1eff00", weight: 2, opacity: 1.0 }
+        };
+
+        // Создание слоя для каждого десятилетия
+        var layers = {};
+
+        function addKmlLayer(fileName, decade) {
+            layers[decade] = omnivore.kml(fileName)
+                .on('ready', function() {
+                    this.eachLayer(function(layer) {
+                        layer.setStyle(styles[decade]);
+
+                        // Всплывающая подсказка
+                        if (layer.feature && layer.feature.properties) {
+                            var name = layer.feature.properties.name || 'Объект';
+                            var description = layer.feature.properties.description || 'Описание отсутствует';
+                            layer.bindPopup("<b>" + name + "</b><br>" + description);
+                        }
+                    });
+                    map.fitBounds(this.getBounds()); // Установка границ карты
+                })
+                .on('error', function(error) {
+                    console.error("Ошибка загрузки KML файла для " + decade, error);
+                })
+                .addTo(map);
+        }
+
+        // Добавляем KML-файлы
+        addKmlLayer('1930s.kml', '1930s');
+        addKmlLayer('1940s.kml', '1940s');
+        addKmlLayer('1950s.kml', '1950s');
+        addKmlLayer('1960s.kml', '1960s');
+        addKmlLayer('1970s.kml', '1970s');
+        addKmlLayer('1980s.kml', '1980s');
+        addKmlLayer('1990s.kml', '1990s');
+        addKmlLayer('2000s.kml', '2000s');
+        addKmlLayer('2010s.kml', '2010s');
+        addKmlLayer('2020s.kml', '2020s');
+
+        // Функция переключения отображения слоев
+        function toggleLayer(event) {
+            var decade = event.target.id.split('-')[1];
+            if (event.target.checked) {
+                layers[decade].addTo(map);
+            } else {
+                map.removeLayer(layers[decade]);
+            }
+        }
+
+        // Привязываем функцию переключения к чекбоксам
+        document.querySelectorAll('.legend-item input[type="checkbox"]').forEach(function(checkbox) {
+            checkbox.addEventListener('change', toggleLayer);
+        });
+    </script>
+</body>
+</html>
